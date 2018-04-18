@@ -92,6 +92,9 @@ class SSHConnection:
             self.app.service.get_system_user_auth_info(system_user)
 
     def get_proxy_sock(self, asset):
+        """
+        获取代理sock
+        """
         sock = None
         domain = self.app.service.get_domain_detail_with_gateway(
             asset.domain
@@ -107,10 +110,10 @@ class SSHConnection:
                 "-W", "{}:{}".format(asset.ip, asset.port), "-q",
             ]
 
-            if gateway.password:
+            if gateway.password:    # 网关 password
                 proxy_command.insert(0, "sshpass -p {}".format(gateway.password))
 
-            if gateway.private_key:
+            if gateway.private_key: # 网关私钥
                 gateway.set_key_dir(os.path.join(self.app.root_path, 'keys'))
                 proxy_command.append("-i {}".format(gateway.private_key_file))
             proxy_command = ' '.join(proxy_command)

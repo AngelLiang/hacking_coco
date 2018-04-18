@@ -129,6 +129,9 @@ class InteractiveServer:
                 input_data.append(data)
 
     def dispatch(self, opt):
+        """
+        调度
+        """
         if opt is None:
             return self._sentinel
         elif opt.startswith("/"):
@@ -147,6 +150,9 @@ class InteractiveServer:
             self.search_and_proxy(opt)
 
     def search_assets(self, q):
+        """
+        查找资产
+        """
         if self.assets is None:
             self.get_user_assets()
         result = []
@@ -227,13 +233,19 @@ class InteractiveServer:
         )
 
     def search_and_display(self, q):
-        self.search_assets(q)
-        self.display_search_result()
+        self.search_assets(q)   # 查找资产
+        self.display_search_result()    # 显示查找结果
 
     def get_user_asset_groups(self):
+        """
+        获取用户的资产分组
+        """
         self.asset_groups = self.app.service.get_user_asset_groups(self.client.user)
 
     def get_user_asset_groups_async(self):
+        """
+        异步获取用户的资产分组
+        """
         thread = threading.Thread(target=self.get_user_asset_groups)
         thread.start()
 
@@ -247,10 +259,16 @@ class InteractiveServer:
         return assets
 
     def get_user_assets(self):
+        """
+        获取用户的资产
+        """
         self.assets = self.app.service.get_user_assets(self.client.user)
         logger.debug("Get user {} assets total: {}".format(self.client.user, len(self.assets)))
 
     def get_user_assets_async(self):
+        """
+        异步获取用户的资产
+        """
         thread = threading.Thread(target=self.get_user_assets)
         thread.start()
 
@@ -281,6 +299,9 @@ class InteractiveServer:
             self.client.send(wr("{} {}".format(index, system_user.name)))
 
     def search_and_proxy(self, opt):
+        """
+        查找并代理
+        """
         self.search_assets(opt)
         if self.search_result and len(self.search_result) == 1:
             asset = self.search_result[0]
@@ -292,6 +313,9 @@ class InteractiveServer:
             self.display_search_result()
 
     def proxy(self, asset):
+        """
+        代理
+        """
         system_user = self.choose_system_user(asset.system_users_granted)
         if system_user is None:
             self.client.send(_("没有系统用户"))
@@ -312,6 +336,9 @@ class InteractiveServer:
         self.close()
 
     def interact_async(self):
+        """
+        异步执行
+        """
         thread = threading.Thread(target=self.interact)
         thread.daemon = True
         thread.start()

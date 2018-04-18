@@ -14,6 +14,8 @@ logger = utils.get_logger(__file__)
 
 class Request:
     def __init__(self, addr):
+        # type 的 item 主要有 irect-tcpip、env、exec、forward-agent、pty、subsystem、x11、port-forward 等
+        # 在 coco/interface.py/SSHInterface类 中的各种 check* 方法中赋值
         self.type = []
         self.meta = {"width": 80, "height": 24}
         self.user = None

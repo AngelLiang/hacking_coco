@@ -141,6 +141,10 @@ class TtyIOParser(object):
 
 
 def is_obj_attr_has(obj, val, attrs=("hostname", "ip", "comment")):
+    """
+    判断某对象的属性名称是否有字符串 val 子串，可用于模糊匹配
+    return: True or False
+    """
     if not attrs:
         vals = [val for val in obj.__dict__.values() if isinstance(val, (str, int))]
     else:
@@ -154,6 +158,10 @@ def is_obj_attr_has(obj, val, attrs=("hostname", "ip", "comment")):
 
 
 def is_obj_attr_eq(obj, val, attrs=("id", "hostname", "ip")):
+    """
+    判断某对象的属性名称与某字符串 val 相等，可用于精确匹配
+    return: True or False
+    """
     if not attrs:
         vals = [val for val in obj.__dict__.values() if isinstance(val, (str, int))]
     else:

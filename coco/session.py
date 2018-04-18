@@ -116,6 +116,7 @@ class Session:
     def bridge(self):
         """
         Bridge clients with server
+        桥接 clients 到 server
         :return:
         """
         logger.info("Start bridge session: {}".format(self.id))
@@ -127,7 +128,7 @@ class Session:
             for sock in [key.fileobj for key, _ in events]:
                 data = sock.recv(BUF_SIZE)
                 # self.put_replay(data)
-                if sock == self.server:
+                if sock == self.server:     # server 关闭连接
                     if len(data) == 0:
                         msg = "Server close the connection"
                         logger.info(msg)
@@ -137,7 +138,7 @@ class Session:
                     self.date_last_active = datetime.datetime.utcnow()
                     for watcher in [self.client] + self._watchers + self._sharers:
                         watcher.send(data)
-                elif sock == self.client:
+                elif sock == self.client:   # client 关闭连接
                     if len(data) == 0:
                         msg = "Client close the connection: {}".format(self.client)
                         logger.info(msg)
@@ -158,6 +159,9 @@ class Session:
         logger.info("Session stop event set: {}".format(self.id))
 
     def set_size(self, width, height):
+        """
+        设置 pty 大小
+        """
         logger.debug("Resize server chan size {}*{}".format(width, height))
         self.server.resize_pty(width=width, height=height)
 
@@ -165,10 +169,13 @@ class Session:
         logger.info("Close the session: {} ".format(self.id))
         self.stop_evt.set()
         self.post_bridge()
-        self.date_end = datetime.datetime.utcnow()
+        self.date_end = datetime.datetime.utcnow()  # 设置断开时间
         self.server.close()
 
     def to_json(self):
+        """
+        转换为 json 格式
+        """
         return {
             "id": self.id,
             "user": self.client.user.username,

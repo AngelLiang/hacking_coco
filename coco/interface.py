@@ -58,6 +58,9 @@ class SSHInterface(paramiko.ServerInterface):
         return paramiko.AUTH_FAILED
 
     def check_auth_password(self, username, password):
+        """
+        检查 ssh 的 username 和 password
+        """
         valid = self.validate_auth(username, password=password)
         if not valid:
             logger.warning("Password and public key auth <%s> failed, reject it" % username)
@@ -77,6 +80,9 @@ class SSHInterface(paramiko.ServerInterface):
             return paramiko.AUTH_SUCCESSFUL
 
     def validate_auth(self, username, password="", public_key=""):
+        """
+        用户验证
+        """
         user, _ = self.app.service.authenticate(
             username, password=password, public_key=public_key,
             remote_addr=self.request.remote_ip,

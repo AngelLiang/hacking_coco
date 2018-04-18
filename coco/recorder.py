@@ -20,6 +20,9 @@ BUF_SIZE = 1024
 
 
 class Singleton(type):
+    """
+    单例
+    """
     def __init__(cls, *args, **kwargs):
         cls.__instance = None
         super().__init__(*args, **kwargs)

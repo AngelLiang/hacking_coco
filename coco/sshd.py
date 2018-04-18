@@ -31,6 +31,8 @@ class SSHServer:
             self.gen_host_key()
         return paramiko.RSAKey(filename=self.host_key_path)
 
+    ####################################################################################################
+
     def gen_host_key(self):
         ssh_key, _ = ssh_key_gen()
         with open(self.host_key_path, 'w') as f:

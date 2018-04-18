@@ -28,6 +28,7 @@ logger = get_logger(__file__)
 
 
 class Coco:
+    # 配置
     config_class = Config
     default_config = {
         'DEFAULT_NAME': socket.gethostname(),
@@ -47,8 +48,8 @@ class Coco:
         'ASSET_LIST_SORT_BY': 'hostname',  # hostname, ip
         'PASSWORD_AUTH': True,
         'PUBLIC_KEY_AUTH': True,
-        'HEARTBEAT_INTERVAL': 5,
-        'MAX_CONNECTIONS': 500,
+        'HEARTBEAT_INTERVAL': 5,    # 心跳间隔
+        'MAX_CONNECTIONS': 500,     # 最大链接数
         'ADMINS': '',
         'COMMAND_STORAGE': {'TYPE': 'server'},   # server
         'REPLAY_STORAGE': {'TYPE': 'server'},
@@ -99,7 +100,12 @@ class Coco:
             self._task_handler = TaskHandler(self)
         return self._task_handler
 
+    ####################################################################################################
+
     def make_logger(self):
+        """
+        创建 log
+        """
         create_logger(self)
 
     def load_extra_conf_from_server(self):
@@ -110,6 +116,9 @@ class Coco:
         self.config.update(configs)
 
     def get_recorder_class(self):
+        """
+        获取记录类
+        """
         self.replay_recorder_class = ServerReplayRecorder
         self.command_recorder_class = get_command_recorder_class(self.config)
 
@@ -134,8 +143,8 @@ class Coco:
         self.service.initial()
         self.load_extra_conf_from_server()
         self.get_recorder_class()
-        self.keep_heartbeat()
-        self.monitor_sessions()
+        self.keep_heartbeat()   # 保持心跳
+        self.monitor_sessions() # 监控器的session
 
     def heartbeat(self):
         """
@@ -175,7 +184,7 @@ class Coco:
 
     def monitor_sessions(self):
         """
-        显示 session
+        监控器的session
         """
         interval = self.config["HEARTBEAT_INTERVAL"]
 
@@ -217,11 +226,17 @@ class Coco:
             self.shutdown()
 
     def run_sshd(self):
+        """
+        运行 sshd
+        """
         thread = threading.Thread(target=self.sshd.run, args=())
         thread.daemon = True
         thread.start()
 
     def run_httpd(self):
+        """
+        运行 httpd
+        """
         thread = threading.Thread(target=self.httpd.run, args=())
         thread.daemon = True
         thread.start()
@@ -235,6 +250,8 @@ class Coco:
         self.sshd.shutdown()
         self.httpd.shutdown()
         logger.info("Grace shutdown the server")
+
+    ####################################################################################################
 
     def add_client(self, client):
         """

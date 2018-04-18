@@ -33,12 +33,17 @@ class ProxyServer:
         return self._app()
 
     def proxy(self, asset, system_user):
+        """
+        代理
+        """
         self.send_connecting_message(asset, system_user)
         self.server = self.get_server_conn(asset, system_user)
         if self.server is None:
             return
-        command_recorder = self.app.new_command_recorder()
-        replay_recorder = self.app.new_replay_recorder()
+        command_recorder = self.app.new_command_recorder()  # 创建新的命令记录
+        replay_recorder = self.app.new_replay_recorder()    # 创建新的命令回复记录
+
+        # 构建 Session
         session = Session(
             self.client, self.server,
             command_recorder=command_recorder,
@@ -46,7 +51,7 @@ class ProxyServer:
         )
         self.app.add_session(session)
         self.watch_win_size_change_async()
-        session.bridge()
+        session.bridge()    # session 桥接
         self.stop_event.set()
         self.end_watch_win_size_change()
         self.app.remove_session(session)

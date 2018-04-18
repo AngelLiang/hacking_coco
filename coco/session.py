@@ -33,6 +33,7 @@ class Session:
     def add_watcher(self, watcher, silent=False):
         """
         Add a watcher, and will be transport server side msg to it.
+        添加一个 watcher，并将传输 server 端的消息给它
 
         :param watcher: A client socket
         :param silent: If true not send welcome message
@@ -52,6 +53,8 @@ class Session:
     def add_sharer(self, sharer, silent=False):
         """
         Add a sharer, it can read and write to server
+        添加一个 sharer，可以读写 server
+
         :param sharer:  A client socket
         :param silent: If true not send welcome message
         :return:
@@ -64,6 +67,9 @@ class Session:
         self._sharers.append(sharer)
 
     def remove_sharer(self, sharer):
+        """
+        移除 sharer
+        """
         logger.info("Session %s remove sharer %s" % (self.id, sharer))
         sharer.send("Leave session {} at {}"
                     .format(self.id, datetime.datetime.now())
@@ -121,8 +127,12 @@ class Session:
         """
         logger.info("Start bridge session: {}".format(self.id))
         self.pre_bridge()
+
+        # client 和 server 都注册到 selectors
         self.sel.register(self.client, selectors.EVENT_READ)
         self.sel.register(self.server, selectors.EVENT_READ)
+
+        # 检查是否有停止事件
         while not self.stop_evt.is_set():
             events = self.sel.select()
             for sock in [key.fileobj for key, _ in events]:

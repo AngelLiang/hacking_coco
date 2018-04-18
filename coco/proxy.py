@@ -66,6 +66,9 @@ class ProxyServer:
         )
 
     def get_server_conn(self, asset, system_user):
+        """
+        获取 server 连接
+        """
         logger.info("Connect to {}".format(asset.hostname))
         if not self.validate_permission(asset, system_user):
             self.client.send(warning('No permission'))
@@ -81,6 +84,9 @@ class ProxyServer:
         pass
 
     def get_ssh_server_conn(self, asset, system_user):
+        """
+        获取 server ssh 连接
+        """
         ssh = SSHConnection(self.app)
         request = self.client.request
         term = request.meta.get('term', 'xterm')

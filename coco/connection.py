@@ -23,15 +23,20 @@ class SSHConnection:
         return self._app()
 
     def get_ssh_client(self, asset, system_user):
+        """
+        获取 ssh client
+        """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         sock = None
         self.get_system_user_auth(system_user)
 
+        # 如果资产有 domain ，则获取代理的 sock
         if asset.domain:
             sock = self.get_proxy_sock(asset)
 
         try:
+            # ssh 连接
             ssh.connect(
                 asset.ip, port=asset.port, username=system_user.username,
                 password=system_user.password, pkey=system_user.private_key,
@@ -77,6 +82,9 @@ class SSHConnection:
             return None, msg
 
     def get_sftp(self, asset, system_user):
+        """
+        获取 sftp
+        """
         ssh, msg = self.get_ssh_client(asset, system_user)
         if ssh:
             return ssh.open_sftp(), None
@@ -93,7 +101,7 @@ class SSHConnection:
 
     def get_proxy_sock(self, asset):
         """
-        获取代理sock
+        获取代理 sock
         """
         sock = None
         domain = self.app.service.get_domain_detail_with_gateway(
@@ -103,6 +111,8 @@ class SSHConnection:
             return None
         for i in domain.gateways:
             gateway = domain.random_ssh_gateway()
+
+            # 代理命令
             proxy_command = [
                 "ssh", "-o", "StrictHostKeyChecking=no",
                 "-p", str(gateway.port),

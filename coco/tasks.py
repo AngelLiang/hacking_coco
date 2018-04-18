@@ -18,6 +18,9 @@ class TaskHandler:
         return self._app()
 
     def handle_kill_session(self, task):
+        """
+        杀死 session
+        """
         logger.info("Handle kill session task: {}".format(task.args))
         session_id = task.args
         session = None

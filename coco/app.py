@@ -21,7 +21,7 @@ from .recorder import get_command_recorder_class, ServerReplayRecorder
 from .utils import get_logger
 
 
-__version__ = '1.0.0'
+__version__ = '1.2.0'
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 logger = get_logger(__file__)
@@ -59,8 +59,8 @@ class Coco:
         self.config = self.config_class(self.root_path, defaults=self.default_config)
         self.sessions = []
         self.clients = []
-        self.lock = threading.Lock()
-        self.stop_evt = threading.Event()
+        self.lock = threading.Lock()        # 线程锁
+        self.stop_evt = threading.Event()   # 线程事件
         self._service = None
         self._sshd = None
         self._httpd = None
@@ -114,13 +114,22 @@ class Coco:
         self.command_recorder_class = get_command_recorder_class(self.config)
 
     def new_command_recorder(self):
+        """
+        创建新的命令记录
+        """
         recorder = self.command_recorder_class(self)
         return recorder
 
     def new_replay_recorder(self):
+        """
+        创建新的命令回应记录
+        """
         return self.replay_recorder_class(self)
 
     def bootstrap(self):
+        """
+        启动
+        """
         self.make_logger()
         self.service.initial()
         self.load_extra_conf_from_server()
@@ -129,6 +138,9 @@ class Coco:
         self.monitor_sessions()
 
     def heartbeat(self):
+        """
+        心跳
+        """
         _sessions = [s.to_json() for s in self.sessions]
         tasks = self.service.terminal_heartbeat(_sessions)
         if tasks:
@@ -143,19 +155,28 @@ class Coco:
         t.start()
 
     def handle_task(self, tasks):
+        """
+        处理任务
+        """
         for task in tasks:
             self.task_handler.handle(task)
 
     def keep_heartbeat(self):
+        """
+        保持心跳，线程方式启动
+        """
         def func():
             while not self.stop_evt.is_set():
-                self.heartbeat()
-                time.sleep(self.config["HEARTBEAT_INTERVAL"])
+                self.heartbeat()    # 发送心跳
+                time.sleep(self.config["HEARTBEAT_INTERVAL"])   # 休眠
 
         thread = threading.Thread(target=func)
         thread.start()
 
     def monitor_sessions(self):
+        """
+        显示 session
+        """
         interval = self.config["HEARTBEAT_INTERVAL"]
 
         def func():
@@ -216,11 +237,17 @@ class Coco:
         logger.info("Grace shutdown the server")
 
     def add_client(self, client):
+        """
+        添加 cleint
+        """
         with self.lock:
             self.clients.append(client)
             logger.info("New client {} join, total {} now".format(client, len(self.clients)))
 
     def remove_client(self, client):
+        """
+        移除 client
+        """
         with self.lock:
             try:
                 self.clients.remove(client)
@@ -230,11 +257,17 @@ class Coco:
                 pass
 
     def add_session(self, session):
+        """
+        添加 session
+        """
         with self.lock:
             self.sessions.append(session)
             self.service.create_session(session.to_json())
 
     def remove_session(self, session):
+        """
+        移除 session
+        """
         with self.lock:
             try:
                 logger.info("Remove session: {}".format(session))

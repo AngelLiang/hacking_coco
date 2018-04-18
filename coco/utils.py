@@ -181,6 +181,9 @@ def wrap_with_line_feed(s, before=0, after=1):
 
 def wrap_with_color(text, color='white', background=None,
                     bolder=False, underline=False):
+    """
+    颜色包装
+    """
     bolder_ = '1'
     _underline = '4'
     color_map = {
@@ -266,6 +269,9 @@ def split_string_int(s):
 
 
 def sort_assets(assets, order_by='hostname'):
+    """
+    资产排序
+    """
     if order_by == 'ip':
         assets = sorted(assets, key=lambda asset: [int(d) for d in asset.ip.split('.') if d.isdigit()])
     else:

@@ -13,6 +13,9 @@ logger = utils.get_logger(__file__)
 
 
 class Request:
+    """
+    请求类
+    """
     def __init__(self, addr):
         # type 的 item 主要有 irect-tcpip、env、exec、forward-agent、pty、subsystem、x11、port-forward 等
         # 在 coco/interface.py/SSHInterface类 中的各种 check* 方法中赋值
@@ -66,7 +69,7 @@ class Client:
         if isinstance(b, str):
             b = b.encode("utf-8")
         try:
-            return self.chan.send(b)
+            return self.chan.send(b)    # 通过 chan 发送
         except OSError:
             self.close()
             return
@@ -115,7 +118,10 @@ class Server:
         self._session_ref = None
 
     def fileno(self):
-        return self.chan.fileno()
+        """
+        文件描述符
+        """
+        return self.chan.fileno()   # 返回 chan 的文件描述符
 
     def set_session(self, session):
         self._session_ref = weakref.ref(session)
@@ -151,10 +157,16 @@ class Server:
             self._in_input_state = True
 
     def send(self, b):
-        self.parse(b)
-        return self.chan.send(b)
+        """
+        发送
+        """
+        self.parse(b)               # 解析
+        return self.chan.send(b)    # 通过 chan 发送
 
     def recv(self, size):
+        """
+        接收
+        """
         data = self.chan.recv(size)
         self.session.put_replay(data)
         if self._input_initial:

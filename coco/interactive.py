@@ -320,8 +320,8 @@ class InteractiveServer:
         if system_user is None:
             self.client.send(_("没有系统用户"))
             return
-        forwarder = ProxyServer(self.app, self.client)
-        forwarder.proxy(asset, system_user)
+        forwarder = ProxyServer(self.app, self.client)  # 获取一个 ProxyServer 对象
+        forwarder.proxy(asset, system_user) # 开始代理转发
 
     def interact(self):
         self.display_banner()

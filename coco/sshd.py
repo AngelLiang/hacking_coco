@@ -37,23 +37,31 @@ class SSHServer:
             f.write(ssh_key)
 
     def run(self):
+        """
+        启动
+        """
         host = self.app.config["BIND_HOST"]
         port = self.app.config["SSHD_PORT"]
         print('Starting ssh server at {}:{}'.format(host, port))
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((host, port))
         self.sock.listen(BACKLOG)
+        
+        # 循环运行
         while not self.stop_evt.is_set():
             try:
-                sock, addr = self.sock.accept()
+                sock, addr = self.sock.accept() # accept
                 logger.info("Get ssh request from {}: {}".format(addr[0], addr[1]))
-                thread = threading.Thread(target=self.handle_connection, args=(sock, addr))
+                thread = threading.Thread(target=self.handle_connection, args=(sock, addr)) # 使用线程处理连接
                 thread.daemon = True
                 thread.start()
             except Exception as e:
                 logger.error("Start SSH server error: {}".format(e))
 
     def handle_connection(self, sock, addr):
+        """
+        处理连接
+        """
         transport = paramiko.Transport(sock, gss_kex=False)
         try:
             transport.load_server_moduli()
@@ -64,10 +72,12 @@ class SSHServer:
         transport.set_subsystem_handler(
             'sftp', paramiko.SFTPServer, SFTPServer
         )
-        request = Request(addr)
-        server = SSHInterface(self.app, request)
+
+        request = Request(addr) # 包装一下 addr 为 request
+        server = SSHInterface(self.app, request)    # 构建 SSHInterface 作为 ssh server ， SSHInterface 在 interface.py 文件里
+
         try:
-            transport.start_server(server=server)
+            transport.start_server(server=server)   # 启动 ssh server
         except paramiko.SSHException:
             logger.warning("SSH negotiation failed")
             return
@@ -75,11 +85,14 @@ class SSHServer:
             logger.warning("Handle EOF Error")
             return
 
+        # 进入循环
         while True:
+            # 如果没有活动的连接，则关闭并跳出
             if not transport.is_active():
                 transport.close()
                 sock.close()
                 break
+            # accept
             chan = transport.accept()
             server.event.wait(5)
 
@@ -90,20 +103,28 @@ class SSHServer:
                 logger.warning("Client not request a valid request, exiting")
                 return
 
+            # 线程方式处理 chan
             t = threading.Thread(target=self.handle_chan, args=(chan, request))
             t.daemon = True
             t.start()
 
+
     def handle_chan(self, chan, request):
-        client = Client(chan, request)
-        self.app.add_client(client)
-        self.dispatch(client)
+        """
+        处理 chan
+        """
+        client = Client(chan, request)  # 构建一个 client
+        self.app.add_client(client) # 添加 client
+        self.dispatch(client)       # 调度
 
     def dispatch(self, client):
+        """
+        调度
+        """
         request_type = client.request.type
-        if 'pty' in request_type:
+        if 'pty' in request_type:   # 一般会进入这里
             logger.info("Request type `pty`, dispatch to interactive mode")
-            InteractiveServer(self.app, client).interact()
+            InteractiveServer(self.app, client).interact()  # 调用 InteractiveServer 的 interact() 方法
         elif 'subsystem' in request_type:
             pass
         else:

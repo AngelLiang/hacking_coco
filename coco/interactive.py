@@ -327,9 +327,9 @@ class InteractiveServer:
         self.display_banner()
         while True:
             try:
-                opt = self.get_option()
-                rv = self.dispatch(opt)
-                if rv is self._sentinel:
+                opt = self.get_option() # 获取选项
+                rv = self.dispatch(opt) # 调度
+                if rv is self._sentinel:    # 如果是 _sentinel 则 break
                     break
             except socket.error:
                 break

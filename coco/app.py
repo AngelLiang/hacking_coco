@@ -116,29 +116,21 @@ class Coco:
         self.config.update(configs)
 
     def get_recorder_class(self):
-        """
-        获取记录类
-        """
+        """获取记录类"""
         self.replay_recorder_class = ServerReplayRecorder
         self.command_recorder_class = get_command_recorder_class(self.config)
 
     def new_command_recorder(self):
-        """
-        创建新的命令记录
-        """
+        """创建新的命令记录"""
         recorder = self.command_recorder_class(self)
         return recorder
 
     def new_replay_recorder(self):
-        """
-        创建新的命令回应记录
-        """
+        """创建新的命令回应记录"""
         return self.replay_recorder_class(self)
 
     def bootstrap(self):
-        """
-        启动
-        """
+        """启动"""
         self.make_logger()
         self.service.initial()
         self.load_extra_conf_from_server()
@@ -147,9 +139,7 @@ class Coco:
         self.monitor_sessions() # 监控器的session
 
     def heartbeat(self):
-        """
-        心跳
-        """
+        """心跳"""
         _sessions = [s.to_json() for s in self.sessions]
         tasks = self.service.terminal_heartbeat(_sessions)
         if tasks:
@@ -164,16 +154,12 @@ class Coco:
         t.start()
 
     def handle_task(self, tasks):
-        """
-        处理任务
-        """
+        """处理任务"""
         for task in tasks:
             self.task_handler.handle(task)
 
     def keep_heartbeat(self):
-        """
-        保持心跳，线程方式启动
-        """
+        """保持心跳，线程方式启动"""
         def func():
             while not self.stop_evt.is_set():
                 self.heartbeat()    # 发送心跳
@@ -183,9 +169,7 @@ class Coco:
         thread.start()
 
     def monitor_sessions(self):
-        """
-        监控器的session
-        """
+        """监控器的session"""
         interval = self.config["HEARTBEAT_INTERVAL"]
 
         def func():
@@ -226,17 +210,13 @@ class Coco:
             self.shutdown()
 
     def run_sshd(self):
-        """
-        运行 sshd
-        """
+        """启动 sshd"""
         thread = threading.Thread(target=self.sshd.run, args=())
         thread.daemon = True
         thread.start()
 
     def run_httpd(self):
-        """
-        运行 httpd
-        """
+        """启动 httpd"""
         thread = threading.Thread(target=self.httpd.run, args=())
         thread.daemon = True
         thread.start()
@@ -254,17 +234,13 @@ class Coco:
     ####################################################################################################
 
     def add_client(self, client):
-        """
-        添加 cleint
-        """
+        """添加 cleint"""
         with self.lock:
             self.clients.append(client)
             logger.info("New client {} join, total {} now".format(client, len(self.clients)))
 
     def remove_client(self, client):
-        """
-        移除 client
-        """
+        """移除 client"""
         with self.lock:
             try:
                 self.clients.remove(client)
@@ -274,17 +250,13 @@ class Coco:
                 pass
 
     def add_session(self, session):
-        """
-        添加 session
-        """
+        """添加 session"""
         with self.lock:
             self.sessions.append(session)
             self.service.create_session(session.to_json())
 
     def remove_session(self, session):
-        """
-        移除 session
-        """
+        """移除 session"""
         with self.lock:
             try:
                 logger.info("Remove session: {}".format(session))

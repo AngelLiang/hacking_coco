@@ -33,13 +33,15 @@ class ProxyServer:
         return self._app()
 
     def proxy(self, asset, system_user):
-        """
-        代理
-        """
-        self.send_connecting_message(asset, system_user)
-        self.server = self.get_server_conn(asset, system_user)
+        """代理"""
+        self.send_connecting_message(asset, system_user)    # 发送连接中信息，线程启动
+        self.server = self.get_server_conn(asset, system_user)  # 获取 server 的连接
+
+        # 连接失败则返回
         if self.server is None:
             return
+        
+        # 创建记录
         command_recorder = self.app.new_command_recorder()  # 创建新的命令记录
         replay_recorder = self.app.new_replay_recorder()    # 创建新的命令回复记录
 
@@ -72,7 +74,7 @@ class ProxyServer:
         return: Server Object or None
         """
         logger.info("Connect to {}".format(asset.hostname))
-        if not self.validate_permission(asset, system_user):
+        if not self.validate_permission(asset, system_user):    # 验证权限
             self.client.send(warning('No permission'))
             return None
         if True:
@@ -101,7 +103,8 @@ class ProxyServer:
         # 如果没有 chan
         if not chan:
             self.client.send(warning(wr(msg, before=1, after=0)))
-        self.connecting = False
+
+        self.connecting = False # 取消连接中状态
         self.client.send(b'\r\n')
         return Server(chan, asset, system_user) # 包装成 Server 并返回
 
@@ -127,9 +130,11 @@ class ProxyServer:
         self.client.request.change_size_event.set()
 
     def send_connecting_message(self, asset, system_user):
+        """发送连接中信息"""
         def func():
             delay = 0.0
             self.client.send('Connecting to {}@{} {:.1f}'.format(system_user, asset, delay))
+            # 当 连接中状态标志置位 且 没有超时 则不断打印消息
             while self.connecting and delay < TIMEOUT:
                 self.client.send('\x08\x08\x08{:.1f}'.format(delay).encode('utf-8'))
                 time.sleep(0.1)

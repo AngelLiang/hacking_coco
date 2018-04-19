@@ -67,9 +67,7 @@ class Session:
         self._sharers.append(sharer)
 
     def remove_sharer(self, sharer):
-        """
-        移除 sharer
-        """
+        """移除 sharer"""
         logger.info("Session %s remove sharer %s" % (self.id, sharer))
         sharer.send("Leave session {} at {}"
                     .format(self.id, datetime.datetime.now())
@@ -84,6 +82,9 @@ class Session:
         self._replay_recorder = recorder
 
     def put_command(self, _input, _output):
+        """
+        存放命令记录
+        """
         if not _input:
             return
         self._command_recorder.record({
@@ -97,6 +98,9 @@ class Session:
         })
 
     def put_replay(self, data):
+        """
+        存放命令回复记录
+        """
         self._replay_recorder.record({
             "session": self.id,
             "data": data,
@@ -104,10 +108,12 @@ class Session:
         })
 
     def pre_bridge(self):
+        """桥接准备工作"""
         self._replay_recorder.session_start(self.id)
         self._command_recorder.session_start(self.id)
 
     def post_bridge(self):
+        """桥接收尾工作"""
         self._replay_recorder.session_end(self.id)
         self._command_recorder.session_end(self.id)
 
@@ -169,9 +175,7 @@ class Session:
         logger.info("Session stop event set: {}".format(self.id))
 
     def set_size(self, width, height):
-        """
-        设置 pty 大小
-        """
+        """设置 pty 大小"""
         logger.debug("Resize server chan size {}*{}".format(width, height))
         self.server.resize_pty(width=width, height=height)
 
@@ -183,9 +187,7 @@ class Session:
         self.server.close()
 
     def to_json(self):
-        """
-        转换为 json 格式
-        """
+        """转换为 json 格式"""
         return {
             "id": self.id,
             "user": self.client.user.username,

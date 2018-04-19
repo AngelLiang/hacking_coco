@@ -15,6 +15,7 @@ TIMEOUT = 10
 
 
 class SSHConnection:
+    """ssh客户端"""
     def __init__(self, app):
         self._app = weakref.ref(app)
 
@@ -93,7 +94,7 @@ class SSHConnection:
 
     def get_system_user_auth(self, system_user):
         """
-        获取系统用户的认证信息，密码或秘钥
+        获取系统用户的认证信息，密码或秘钥，依赖于self.app
         :return: system user have full info
         """
         system_user.password, system_user.private_key = \

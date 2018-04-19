@@ -122,8 +122,8 @@ class Session:
     def bridge(self):
         """
         Bridge clients with server
+        
         桥接 clients 到 server
-        :return:
         """
         logger.info("Start bridge session: {}".format(self.id))
         self.pre_bridge()

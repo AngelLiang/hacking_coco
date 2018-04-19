@@ -87,6 +87,9 @@ def ssh_key_gen(length=2048, type='rsa', password=None,
 
 
 class TtyIOParser(object):
+    """
+    tty io 封装
+    """
     def __init__(self, width=80, height=24):
         self.screen = pyte.Screen(width, height)
         self.stream = pyte.ByteStream()
@@ -99,6 +102,7 @@ class TtyIOParser(object):
     def parse_output(self, data, sep='\n'):
         """
         Parse user command output
+        解析 user 命令输出
 
         :param data: output data list like, [b'data', b'data']
         :param sep:  line separator
@@ -120,6 +124,7 @@ class TtyIOParser(object):
     def parse_input(self, data):
         """
         Parse user input command
+        解析 user 输入命令
 
         :param data: input data list, like [b'data', b'data']
         :return: command unicode
@@ -139,6 +144,7 @@ class TtyIOParser(object):
         command = self.clean_ps1_etc(command)
         return command.strip()
 
+######################################################################
 
 def is_obj_attr_has(obj, val, attrs=("hostname", "ip", "comment")):
     """

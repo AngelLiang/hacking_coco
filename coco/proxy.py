@@ -68,6 +68,8 @@ class ProxyServer:
     def get_server_conn(self, asset, system_user):
         """
         获取 server 连接
+
+        return: Server Object or None
         """
         logger.info("Connect to {}".format(asset.hostname))
         if not self.validate_permission(asset, system_user):
@@ -85,7 +87,9 @@ class ProxyServer:
 
     def get_ssh_server_conn(self, asset, system_user):
         """
-        获取 server ssh 连接
+        获取一个 server ssh 连接
+
+        return: Server Object
         """
         ssh = SSHConnection(self.app)
         request = self.client.request
@@ -98,7 +102,7 @@ class ProxyServer:
             self.client.send(warning(wr(msg, before=1, after=0)))
         self.connecting = False
         self.client.send(b'\r\n')
-        return Server(chan, asset, system_user)
+        return Server(chan, asset, system_user) # 包装成 Server 并返回
 
     def watch_win_size_change(self):
         while self.client.request.change_size_event.wait():

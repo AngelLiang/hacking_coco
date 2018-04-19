@@ -61,9 +61,9 @@ class SSHServer:
                 logger.error("Start SSH server error: {}".format(e))
 
     def handle_connection(self, sock, addr):
-        """
-        处理连接
-        """
+        """处理连接"""
+
+        # ssh transport 绑定一个 socket
         transport = paramiko.Transport(sock, gss_kex=False)
         try:
             transport.load_server_moduli()
@@ -81,7 +81,7 @@ class SSHServer:
         try:
             transport.start_server(server=server)   # 启动 ssh server
         except paramiko.SSHException:
-            logger.warning("SSH negotiation failed")
+            logger.warning("SSH negotiation failed")    # ssh 协商失败
             return
         except EOFError:
             logger.warning("Handle EOF Error")
@@ -89,7 +89,7 @@ class SSHServer:
 
         # 进入循环
         while True:
-            # 如果没有活动的连接，则关闭并跳出
+            # 如果没有活动的连接，则关闭并break
             if not transport.is_active():
                 transport.close()
                 sock.close()
@@ -112,17 +112,13 @@ class SSHServer:
 
 
     def handle_chan(self, chan, request):
-        """
-        处理 chan
-        """
+        """处理 chan"""
         client = Client(chan, request)  # 构建一个 client
         self.app.add_client(client) # 添加 client
         self.dispatch(client)       # 调度
 
     def dispatch(self, client):
-        """
-        调度
-        """
+        """调度"""
         request_type = client.request.type
         if 'pty' in request_type:   # 一般会进入这里
             logger.info("Request type `pty`, dispatch to interactive mode")

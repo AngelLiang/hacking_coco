@@ -91,13 +91,14 @@ class ProxyServer:
 
         return: Server Object
         """
-        ssh = SSHConnection(self.app)
+        ssh = SSHConnection(self.app)   # 连接 ssh
         request = self.client.request
         term = request.meta.get('term', 'xterm')
         width = request.meta.get('width', 80)
         height = request.meta.get('height', 24)
         chan, msg = ssh.get_channel(asset, system_user, term=term,
                                     width=width, height=height)
+        # 如果没有 chan
         if not chan:
             self.client.send(warning(wr(msg, before=1, after=0)))
         self.connecting = False

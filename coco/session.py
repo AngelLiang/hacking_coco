@@ -122,11 +122,11 @@ class Session:
     def bridge(self):
         """
         Bridge clients with server
-        
+
         桥接 clients 到 server
         """
         logger.info("Start bridge session: {}".format(self.id))
-        self.pre_bridge()
+        self.pre_bridge()   # 做一些命令记录的准备工作
 
         # client 和 server 都注册到 selectors
         self.sel.register(self.client, selectors.EVENT_READ)
@@ -178,7 +178,7 @@ class Session:
     def close(self):
         logger.info("Close the session: {} ".format(self.id))
         self.stop_evt.set()
-        self.post_bridge()
+        self.post_bridge()  # 命令记录的收尾工作
         self.date_end = datetime.datetime.utcnow()  # 设置断开时间
         self.server.close()
 

@@ -45,15 +45,11 @@ class SSHInterface(paramiko.ServerInterface):
         pass
 
     def enable_auth_gssapi(self):
-        """
-        是否使能 gssapi
-        """
+        """是否使能 gssapi"""
         return False
 
     def get_allowed_auths(self, username):
-        """
-        允许的认证方式
-        """
+        """允许的认证方式"""
         supported = []
         if self.app.config["PASSWORD_AUTH"]:
             supported.append("password")
@@ -63,6 +59,9 @@ class SSHInterface(paramiko.ServerInterface):
         return ",".join(supported)
 
     def check_auth_none(self, username):
+        """是否允许无密码登录
+        sshd server 必须实现
+        """
         return paramiko.AUTH_FAILED
 
     def check_auth_password(self, username, password):

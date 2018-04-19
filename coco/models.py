@@ -149,7 +149,7 @@ class Server:
                     "#" * 30 + " End " + "#" * 30,
                 ))
                 if self._input:
-                    self.session.put_command(self._input, self._output)
+                    self.session.put_command(self._input, self._output) # 记录命令回复
                 self.input_data.clean()
                 self.output_data.clean()
             self._in_input_state = True
@@ -162,7 +162,7 @@ class Server:
     def recv(self, size):
         """接收"""
         data = self.chan.recv(size)
-        self.session.put_replay(data)
+        self.session.put_replay(data)   # 命令记录
         if self._input_initial:
             if self._in_input_state:
                 self.input_data.append(data)

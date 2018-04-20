@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
+
 import threading
 import uuid
 import datetime
@@ -14,12 +14,18 @@ logger = get_logger(__file__)
 
 
 class Session:
+    """
+    Session类
+    实现 client 和 server 之间的数据转发功能
+    使用 selectors 模块实现
+    """
+
     def __init__(self, client, server, command_recorder=None, replay_recorder=None):
         self.id = str(uuid.uuid4())
         self.client = client  # Master of the session, it's a client sock
         self.server = server  # Server channel
-        self._watchers = []  # Only watch session
-        self._sharers = []  # Join to the session, read and write
+        self._watchers = []  # Only watch session ， 监视者
+        self._sharers = []  # Join to the session, read and write ， 共享者
         self.replaying = True
         self.date_created = datetime.datetime.utcnow()
         self.date_end = None
@@ -144,30 +150,31 @@ class Session:
             for sock in [key.fileobj for key, _ in events]:
                 data = sock.recv(BUF_SIZE)
                 # self.put_replay(data)
-                if sock == self.server:     # server 关闭连接
-                    if len(data) == 0:
+                if sock == self.server:     
+                    if len(data) == 0:  # 如果收到的 data 为0， server 关闭连接
                         msg = "Server close the connection"
                         logger.info(msg)
                         self.close()
                         break
 
                     self.date_last_active = datetime.datetime.utcnow()
+                    # 否则向 client 、watcher 和 sharer 发送数据
                     for watcher in [self.client] + self._watchers + self._sharers:
                         watcher.send(data)
-                elif sock == self.client:   # client 关闭连接
-                    if len(data) == 0:
+                elif sock == self.client:
+                    if len(data) == 0:  # 如果收到的 data 为0， client 关闭连接
                         msg = "Client close the connection: {}".format(self.client)
                         logger.info(msg)
                         for watcher in self._watchers + self._sharers:
                             watcher.send(msg.encode("utf-8"))
                         self.close()
                         break
-                    self.server.send(data)
+                    self.server.send(data)  # 否则向 server 发送数据
                 elif sock in self._sharers:
                     if len(data) == 0:
                         logger.info("Sharer {} leave the session {}".format(sock, self.id))
                         self.remove_sharer(sock)
-                    self.server.send(data)
+                    self.server.send(data)  # sharer 向 server 发送数据
                 elif sock in self._watchers:
                     if len(data) == 0:
                         self._watchers.remove(sock)

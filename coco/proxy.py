@@ -45,7 +45,7 @@ class ProxyServer:
         command_recorder = self.app.new_command_recorder()  # 创建新的命令记录
         replay_recorder = self.app.new_replay_recorder()    # 创建新的命令回复记录
 
-        # 构建 Session
+        # 构建 Session，实现 ssh 桥接
         session = Session(
             self.client, self.server,
             command_recorder=command_recorder,
@@ -53,7 +53,7 @@ class ProxyServer:
         )
         self.app.add_session(session)
         self.watch_win_size_change_async()
-        session.bridge()    # session 桥接
+        session.bridge()    # session 桥接，阻塞
         self.stop_event.set()
         self.end_watch_win_size_change()
         self.app.remove_session(session)

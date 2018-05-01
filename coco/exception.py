@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 
+"""
+异常
+"""
 
 class PermissionFailed(Exception):
     pass

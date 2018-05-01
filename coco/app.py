@@ -196,7 +196,7 @@ class Coco:
 
         try:
             if self.config["SSHD_PORT"] != 0:
-                self.run_sshd()
+                self.run_sshd() # 启动 sshd
 
             if self.config['HTTPD_PORT'] != 0:
                 self.run_httpd()

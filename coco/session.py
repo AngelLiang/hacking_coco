@@ -144,7 +144,7 @@ class Session:
         self.sel.register(self.client, selectors.EVENT_READ)
         self.sel.register(self.server, selectors.EVENT_READ)
 
-        # 检查是否有停止事件
+        # 循环检查是否有停止事件
         while not self.stop_evt.is_set():
             events = self.sel.select()
             for sock in [key.fileobj for key, _ in events]:
@@ -179,7 +179,7 @@ class Session:
                     if len(data) == 0:
                         self._watchers.remove(sock)
                         logger.info("Watcher {} leave the session {}".format(sock, self.id))
-        logger.info("Session stop event set: {}".format(self.id))
+        logger.info("Session stop event set: {}".format(self.id))   # stop日志
 
     def set_size(self, width, height):
         """设置 pty 大小"""

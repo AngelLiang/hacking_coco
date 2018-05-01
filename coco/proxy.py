@@ -12,7 +12,7 @@ from .session import Session
 from .models import Server
 from .connection import SSHConnection
 from .utils import wrap_with_line_feed as wr, wrap_with_warning as warning, \
-     get_logger
+    get_logger
 
 
 logger = get_logger(__file__)
@@ -21,6 +21,10 @@ BUF_SIZE = 4096
 
 
 class ProxyServer:
+    """
+    代理服务器，核心
+    """
+
     def __init__(self, app, client):
         self._app = weakref.ref(app)
         self.client = client
@@ -32,6 +36,8 @@ class ProxyServer:
     def app(self):
         return self._app()
 
+    ##########################################################################
+
     def proxy(self, asset, system_user):
         """代理"""
         self.send_connecting_message(asset, system_user)    # 发送连接中信息，线程启动
@@ -40,7 +46,7 @@ class ProxyServer:
         # 连接失败则返回
         if self.server is None:
             return
-        
+
         # 创建记录
         command_recorder = self.app.new_command_recorder()  # 创建新的命令记录
         replay_recorder = self.app.new_replay_recorder()    # 创建新的命令回复记录
@@ -104,9 +110,9 @@ class ProxyServer:
         if not chan:
             self.client.send(warning(wr(msg, before=1, after=0)))
 
-        self.connecting = False # 取消连接中状态
+        self.connecting = False  # 取消连接中状态
         self.client.send(b'\r\n')
-        return Server(chan, asset, system_user) # 包装成 Server 并返回
+        return Server(chan, asset, system_user)  # 包装成 Server 并返回
 
     def watch_win_size_change(self):
         while self.client.request.change_size_event.wait():
@@ -133,10 +139,12 @@ class ProxyServer:
         """发送连接中信息"""
         def func():
             delay = 0.0
-            self.client.send('Connecting to {}@{} {:.1f}'.format(system_user, asset, delay))
+            self.client.send('Connecting to {}@{} {:.1f}'.format(
+                system_user, asset, delay))
             # 当 连接中状态标志置位 且 没有超时 则不断打印消息
             while self.connecting and delay < TIMEOUT:
-                self.client.send('\x08\x08\x08{:.1f}'.format(delay).encode('utf-8'))
+                self.client.send(
+                    '\x08\x08\x08{:.1f}'.format(delay).encode('utf-8'))
                 time.sleep(0.1)
                 delay += 0.1
         thread = threading.Thread(target=func)

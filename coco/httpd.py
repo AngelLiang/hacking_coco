@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+
+"""
+httpd，提供websocket给前端
+"""
+
 import os
 import socket
 import uuid

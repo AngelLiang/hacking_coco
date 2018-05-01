@@ -7,6 +7,7 @@ import socket
 import threading
 import paramiko
 
+# SSHServer依赖Client类、Request类、SSHInterface类
 from .utils import ssh_key_gen, get_logger
 from .interface import SSHInterface
 from .interactive import InteractiveServer
@@ -23,7 +24,8 @@ class SSHServer:
         self.app = app
         self.stop_evt = threading.Event()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host_key_path = os.path.join(self.app.root_path, 'keys', 'host_rsa_key')
+        self.host_key_path = os.path.join(
+            self.app.root_path, 'keys', 'host_rsa_key')
 
     @property
     def host_key(self):
@@ -31,7 +33,7 @@ class SSHServer:
             self.gen_host_key()
         return paramiko.RSAKey(filename=self.host_key_path)
 
-    ####################################################################################################
+    ##########################################################################
 
     def gen_host_key(self):
         ssh_key, _ = ssh_key_gen()
@@ -39,22 +41,23 @@ class SSHServer:
             f.write(ssh_key)
 
     def run(self):
-        """
-        启动
-        """
+        """启动 sshd"""
         host = self.app.config["BIND_HOST"]
         port = self.app.config["SSHD_PORT"]
         print('Starting ssh server at {}:{}'.format(host, port))
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind((host, port))
-        self.sock.listen(BACKLOG)
-        
+        self.sock.bind((host, port))    # 绑定端口
+        self.sock.listen(BACKLOG)       # 监听
+
         # 循环运行
         while not self.stop_evt.is_set():
             try:
-                sock, addr = self.sock.accept() # accept
-                logger.info("Get ssh request from {}: {}".format(addr[0], addr[1]))
-                thread = threading.Thread(target=self.handle_connection, args=(sock, addr)) # 使用线程处理连接
+                sock, addr = self.sock.accept()  # accept
+                logger.info(
+                    "Get ssh request from {}: {}".format(addr[0], addr[1]))
+                # 使用线程处理连接
+                thread = threading.Thread(
+                    target=self.handle_connection, args=(sock, addr))
                 thread.daemon = True
                 thread.start()
             except Exception as e:
@@ -75,8 +78,9 @@ class SSHServer:
             'sftp', paramiko.SFTPServer, SFTPServer
         )
 
-        request = Request(addr) # 包装一下 addr 为 request
-        server = SSHInterface(self.app, request)    # 构建 SSHInterface 作为 ssh server ， SSHInterface 在 interface.py 文件里
+        request = Request(addr)  # 包装一下 addr 为 request
+        # 构建 SSHInterface 作为 ssh server ， SSHInterface 在 interface.py 文件里
+        server = SSHInterface(self.app, request)
 
         try:
             transport.start_server(server=server)   # 启动 ssh server
@@ -105,16 +109,15 @@ class SSHServer:
                 logger.warning("Client not request a valid request, exiting")
                 return
 
-            # 线程方式处理 chan
+            # 线程方式处理 chan，chan和request作为参数
             t = threading.Thread(target=self.handle_chan, args=(chan, request))
             t.daemon = True
             t.start()
 
-
     def handle_chan(self, chan, request):
         """处理 chan"""
         client = Client(chan, request)  # 构建一个 client
-        self.app.add_client(client) # 添加 client
+        self.app.add_client(client)  # 添加 client
         self.dispatch(client)       # 调度
 
     def dispatch(self, client):
@@ -122,7 +125,8 @@ class SSHServer:
         request_type = client.request.type
         if 'pty' in request_type:   # 一般会进入这里
             logger.info("Request type `pty`, dispatch to interactive mode")
-            InteractiveServer(self.app, client).interact()  # 调用 InteractiveServer 的 interact() 方法
+            # 调用 InteractiveServer 的 interact() 方法
+            InteractiveServer(self.app, client).interact()
         elif 'subsystem' in request_type:
             pass
         else:

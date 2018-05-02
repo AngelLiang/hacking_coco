@@ -20,9 +20,7 @@ BUF_SIZE = 1024
 
 
 class Singleton(type):
-    """
-    单例
-    """
+    """单例"""
     def __init__(cls, *args, **kwargs):
         cls.__instance = None
         super().__init__(*args, **kwargs)
@@ -36,6 +34,8 @@ class Singleton(type):
 
 
 class ReplayRecorder(metaclass=abc.ABCMeta):
+    """命令回复记录"""
+
     def __init__(self, app, session=None):
         self.app = app
         self.session = session
@@ -64,6 +64,8 @@ class ReplayRecorder(metaclass=abc.ABCMeta):
 
 
 class CommandRecorder:
+    """命令记录"""
+
     def __init__(self, app, session=None):
         self.app = app
         self.session = session
@@ -92,6 +94,7 @@ class CommandRecorder:
 
 
 class ServerReplayRecorder(ReplayRecorder):
+
     def __init__(self, app):
         super().__init__(app)
         self.file = None
@@ -134,6 +137,7 @@ class ServerReplayRecorder(ReplayRecorder):
         self.upload_replay(session_id)
 
     def upload_replay(self, session_id):
+        """上传记录"""
         configs = self.app.service.load_config_from_server()
         logger.debug("upload_replay print config: {}".format(configs))
         self.client = jms_storage.init(configs["REPLAY_STORAGE"])
@@ -149,20 +153,23 @@ class ServerReplayRecorder(ReplayRecorder):
 
     def push_to_storage(self, session_id):
         return self.client.upload_file(
-            os.path.join(self.app.config['LOG_DIR'], session_id + '.replay.gz'),
+            os.path.join(self.app.config['LOG_DIR'],
+                         session_id + '.replay.gz'),
             time.strftime('%Y-%m-%d', time.localtime(self.starttime)) + '/' + session_id + '.replay.gz')
 
     def push_storage(self, times, session_id):
         if times > 0:
             if self.push_to_storage(session_id):
-                logger.info("success push session: {}'s replay log to storage ".format(session_id))
+                logger.info(
+                    "success push session: {}'s replay log to storage ".format(session_id))
                 return True
             else:
                 logger.error(
                     "failed report session {}'s replay log to storage, try  {} times".format(session_id, times))
                 return self.push_storage(times - 1, session_id)
         else:
-            logger.error("failed report session {}'s replay log storage, try to push to local".format(session_id))
+            logger.error(
+                "failed report session {}'s replay log storage, try to push to local".format(session_id))
             if self.client.type() == 'jms':
                 return False
             else:
@@ -172,13 +179,16 @@ class ServerReplayRecorder(ReplayRecorder):
     def finish_replay(self, times, session_id):
         if times > 0:
             if self.app.service.finish_replay(session_id):
-                logger.info("success report session {}'s replay log ".format(session_id))
+                logger.info(
+                    "success report session {}'s replay log ".format(session_id))
                 return True
             else:
-                logger.error("failed report session {}'s replay log, try {} times".format(session_id, times))
+                logger.error("failed report session {}'s replay log, try {} times".format(
+                    session_id, times))
                 return self.finish_replay(times - 1, session_id)
         else:
-            logger.error("failed report session {}'s replay log".format(session_id))
+            logger.error(
+                "failed report session {}'s replay log".format(session_id))
             return False
 
     # def __del__(self):
@@ -208,13 +218,15 @@ class ServerCommandRecorder(CommandRecorder, metaclass=Singleton):
     def push_to_server_async(self):
         def func():
             while not self.stop_evt.is_set():
-                data_set = self.queue.mget(self.batch_size, timeout=self.timeout)
+                data_set = self.queue.mget(
+                    self.batch_size, timeout=self.timeout)
                 logger.debug("<Session command recorder {}> queue size: {}".format(
                     self.no, self.queue.qsize())
                 )
                 if not data_set:
                     continue
-                logger.debug("Send {} commands to server".format(len(data_set)))
+                logger.debug(
+                    "Send {} commands to server".format(len(data_set)))
                 ok = self.app.service.push_session_command(data_set)
                 if not ok:
                     self.queue.mput(data_set)
@@ -245,7 +257,8 @@ class ESCommandRecorder(CommandRecorder, metaclass=Singleton):
         self.stop_evt = threading.Event()
         self.push_to_es_async()
         self.__class__.no += 1
-        self.store = jms_storage.ESStore(app.config["COMMAND_STORAGE"].get("HOSTS", self.default_hosts))
+        self.store = jms_storage.ESStore(
+            app.config["COMMAND_STORAGE"].get("HOSTS", self.default_hosts))
         if not self.store.ping():
             raise AssertionError("ESCommand storage init error")
 
@@ -267,7 +280,8 @@ class ESCommandRecorder(CommandRecorder, metaclass=Singleton):
                 )
                 if not data_set:
                     continue
-                logger.debug("Send {} commands to server".format(len(data_set)))
+                logger.debug(
+                    "Send {} commands to server".format(len(data_set)))
                 ok = self.store.bulk_save(data_set)
                 if not ok:
                     self.queue.mput(data_set)

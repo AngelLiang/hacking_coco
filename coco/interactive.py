@@ -30,8 +30,8 @@ class InteractiveServer:
         self.assets = None
         self._search_result = None
         self.asset_groups = None
-        self.get_user_assets_async()
-        self.get_user_asset_groups_async()
+        self.get_user_assets_async()        # 初始化的时候就异步获取用户资产
+        self.get_user_asset_groups_async()  # 初始化的时候就异步获取用户资产分组
 
     @property
     def app(self):

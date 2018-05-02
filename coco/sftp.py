@@ -8,6 +8,9 @@ from .connection import SSHConnection
 
 
 class SFTPServer(paramiko.SFTPServerInterface):
+    """
+    SFTP服务器
+    """
     root = '/tmp'
 
     def __init__(self, server, **kwargs):

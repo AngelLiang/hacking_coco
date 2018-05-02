@@ -110,7 +110,7 @@ class ProxyNamespace(BaseNamespace):
             "member": [],
             "rw": []
         }
-        join_room(client['room'])
+        join_room(client['room'])   # 加入 flask_socketio 的房间
 
     def on_data(self, message):
         """
@@ -260,6 +260,10 @@ class ProxyNamespace(BaseNamespace):
 
 
 class HttpServer:
+    """
+    HTTP 服务器
+    """
+
     # prepare may be rewrite it
     config = {
         'SECRET_KEY': '',

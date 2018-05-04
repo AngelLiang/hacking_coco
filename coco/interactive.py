@@ -139,9 +139,9 @@ class InteractiveServer:
         elif opt.startswith("/"):
             self.search_and_display(opt.lstrip("/"))
         elif opt in ['p', 'P', '']:
-            self.display_assets()
+            self.display_assets()   # 显示资产
         elif opt in ['g', 'G']:  # 分组查询
-            self.display_asset_groups()
+            self.display_asset_groups()  # 显示资产分组
         elif opt.startswith("g") and opt.lstrip("g").isdigit():
             self.display_group_assets(int(opt.lstrip("g")))
         elif opt in ['q', 'Q', 'exit', 'quit']:  # 退出
@@ -149,12 +149,12 @@ class InteractiveServer:
         elif opt in ['h', 'H']:  # 帮助
             self.display_banner()
         else:
-            self.search_and_proxy(opt)
+            self.search_and_proxy(opt)  # 查找并代理
 
     def search_assets(self, q):
         """查找资产"""
         if self.assets is None:
-            self.get_user_assets()
+            self.get_user_assets()  # 获取用户资产
         result = []
 
         # 所有的
@@ -166,6 +166,7 @@ class InteractiveServer:
 
         # 全匹配到则直接返回全匹配的
         if len(result) == 0:
+            # 遍历asset的属性并判断是否全匹配查找的字段
             _result = [
                 asset for asset in self.assets if is_obj_attr_eq(asset, q)]
             if len(_result) == 1:
@@ -173,9 +174,11 @@ class InteractiveServer:
 
         # 最后模糊匹配
         if len(result) == 0:
+            # 遍历asset的属性并判断是否模糊配查找的字段
             result = [
                 asset for asset in self.assets if is_obj_attr_has(asset, q)]
 
+        # 保存结果
         self.search_result = result
 
     def display_assets(self):
@@ -252,9 +255,7 @@ class InteractiveServer:
         self.display_search_result()    # 显示查找结果
 
     def get_user_asset_groups(self):
-        """
-        获取用户的资产分组
-        """
+        """获取用户的资产分组"""
         self.asset_groups = self.app.service.get_user_asset_groups(
             self.client.user)
 
@@ -313,7 +314,9 @@ class InteractiveServer:
 
     def search_and_proxy(self, opt):
         """查找并代理"""
-        self.search_assets(opt)
+        self.search_assets(opt)  # 查找资产
+
+        # 当查找有结果并只返回一个
         if self.search_result and len(self.search_result) == 1:
             asset = self.search_result[0]
             if asset.platform == "Windows":
@@ -321,7 +324,7 @@ class InteractiveServer:
                     warning(_("终端不支持登录windows, 请使用web terminal访问")))
                 return
             self.proxy(asset)
-        else:
+        else:   # 否则，显示查找结果
             self.display_search_result()
 
     def proxy(self, asset):

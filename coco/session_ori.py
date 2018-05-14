@@ -13,7 +13,7 @@ BUF_SIZE = 1024
 logger = get_logger(__file__)
 
 
-class Session:
+class Session_ori:
     """
     Session类
     实现 client 和 server 之间的数据转发功能

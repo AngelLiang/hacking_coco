@@ -14,7 +14,7 @@ logger = get_logger(__file__)
 TIMEOUT = 10
 
 
-class SSHConnection:
+class SSHConnection_ori:
     """ssh客户端"""
     def __init__(self, app):
         self._app = weakref.ref(app)

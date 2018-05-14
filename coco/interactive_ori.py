@@ -19,7 +19,7 @@ from .proxy import ProxyServer
 logger = get_logger(__file__)
 
 
-class InteractiveServer:
+class InteractiveServer_ori:
     """sshd交互服务器"""
     _sentinel = object()
 

@@ -11,7 +11,7 @@ from .utils import get_logger
 logger = get_logger(__file__)
 
 
-class SSHInterface(paramiko.ServerInterface):
+class SSHInterface_ori(paramiko.ServerInterface):
     """
     使用paramiko提供的接口实现ssh server.
 

@@ -20,7 +20,7 @@ TIMEOUT = 10
 BUF_SIZE = 4096
 
 
-class ProxyServer:
+class ProxyServer_ori:
     """
     代理服务器，核心
     """

@@ -43,8 +43,10 @@ class BaseNamespace(Namespace):
         token = request.headers.get("Authorization")
         user = None
         if session_id and csrf_token:
+            # 检查 cookie
             user = self.app.service.check_user_cookie(session_id, csrf_token)
         if token:
+            # 检查 token
             user = self.app.service.check_user_with_token(token)
         return user
 
@@ -138,8 +140,10 @@ class ProxyNamespace(BaseNamespace):
         if not asset_id or not user_id:
             # self.on_connect()
             return
-
+        
+        # 获取资产
         asset = self.app.service.get_asset(asset_id)
+        # 获取system_user
         system_user = self.app.service.get_system_user(user_id)
 
         if not asset or not system_user:
@@ -175,6 +179,7 @@ class ProxyNamespace(BaseNamespace):
             self.emit('disconnect')
             return None
 
+        # 获取token含有的主机信息
         host = self.app.service.get_token_asset(token)
         logger.debug(host)
         if not host:
@@ -185,6 +190,7 @@ class ProxyNamespace(BaseNamespace):
 
         user_id = host.get('user', None)
         logger.debug("self.current_user")
+        # 获取 user profile
         self.current_user = self.app.service.get_user_profile(user_id)
 
         logger.debug(self.current_user)

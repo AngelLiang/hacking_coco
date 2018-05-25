@@ -23,6 +23,7 @@ logger = get_logger(__file__)
 
 
 class BaseNamespace(Namespace):
+    """基本的name space"""
     clients = None
     current_user = None
 
@@ -38,6 +39,7 @@ class BaseNamespace(Namespace):
         logger.debug("{} connect websocket".format(self.current_user))
 
     def get_current_user(self):
+        """获取当前用户"""
         session_id = request.cookies.get('sessionid', '')
         csrf_token = request.cookies.get('csrftoken', '')
         token = request.headers.get("Authorization")
@@ -64,6 +66,11 @@ class ProxyNamespace(BaseNamespace):
         self.rooms = dict()
 
     def new_client(self):
+        """
+        创建新的client
+        
+        @return: dict
+        """
         room = str(uuid.uuid4())
         client = {
             "cols": int(request.cookies.get('cols', 80)),
@@ -77,6 +84,7 @@ class ProxyNamespace(BaseNamespace):
         return client
 
     def make_coco_request(self):
+        """创建coco请求"""
         x_forwarded_for = request.headers.get("X-Forwarded-For", '').split(',')
         if x_forwarded_for and x_forwarded_for[0]:
             remote_ip = x_forwarded_for[0]
@@ -94,7 +102,7 @@ class ProxyNamespace(BaseNamespace):
             rows = int(rows_request)
         else:
             rows = 24
-        req = Request((remote_ip, 0))
+        req = Request((remote_ip, 0))   # 创建了一个 Request 对象
         req.user = self.current_user
         req.meta = {
             "width": width,
@@ -103,9 +111,10 @@ class ProxyNamespace(BaseNamespace):
         return req
 
     def on_connect(self):
+        """连接成功"""
         logger.debug("On connect event trigger")
-        super().on_connect()
-        client = self.new_client()
+        super().on_connect()    # 继承方法
+        client = self.new_client()  # 创建新的client
         self.clients[request.sid] = client
         self.rooms[client['room']] = {
             "admin": request.sid,
@@ -203,6 +212,7 @@ class ProxyNamespace(BaseNamespace):
         self.on_host({'secret': secret, 'uuid': host['asset'], 'userid': host['system_user']})
 
     def on_resize(self, message):
+        """调整窗口大小"""
         cols = message.get('cols')
         rows = message.get('rows')
         logger.debug("On resize event trigger: {}*{}".format(cols, rows))
@@ -256,6 +266,7 @@ class ProxyNamespace(BaseNamespace):
                 del self.clients[request.sid]['proxy'][connection]
 
     def logout(self, connection):
+        """登出"""
         if connection and (request.sid in self.clients.keys()):
             if connection in self.clients[request.sid]["proxy"].keys():
                 del self.clients[request.sid]["proxy"][connection]

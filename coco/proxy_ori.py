@@ -26,6 +26,10 @@ class ProxyServer_ori:
     """
 
     def __init__(self, app, client):
+        """
+        @params: app
+        @params: client
+        """
         self._app = weakref.ref(app)
         self.client = client
         self.server = None

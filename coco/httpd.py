@@ -159,16 +159,21 @@ class ProxyNamespace(BaseNamespace):
             self.on_connect()
             return
 
+        # 获取 socketpair
         child, parent = socket.socketpair()
+        # 创建 Client
         self.clients[request.sid]["client"][connection] = Client(
             parent, self.clients[request.sid]["request"]
         )
+        # 创建 WSProxy
         self.clients[request.sid]["proxy"][connection] = WSProxy(
             self, child, self.clients[request.sid]["room"], connection
         )
+        # 创建 ProxyServer，这里就开始桥接
         self.clients[request.sid]["forwarder"][connection] = ProxyServer(
             self.app, self.clients[request.sid]["client"][connection]
         )
+        # 后台任务
         self.socketio.start_background_task(
             self.clients[request.sid]["forwarder"][connection].proxy,
             asset, system_user

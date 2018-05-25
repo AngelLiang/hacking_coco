@@ -84,7 +84,11 @@ class ProxyNamespace(BaseNamespace):
         return client
 
     def make_coco_request(self):
-        """创建coco请求"""
+        """
+        创建coco请求
+
+        @return: Request
+        """
         x_forwarded_for = request.headers.get("X-Forwarded-For", '').split(',')
         if x_forwarded_for and x_forwarded_for[0]:
             remote_ip = x_forwarded_for[0]
@@ -173,7 +177,7 @@ class ProxyNamespace(BaseNamespace):
         self.clients[request.sid]["forwarder"][connection] = ProxyServer(
             self.app, self.clients[request.sid]["client"][connection]
         )
-        # 后台任务
+        # 后台任务，执行 ProxyServer.proxy() 开始代理
         self.socketio.start_background_task(
             self.clients[request.sid]["forwarder"][connection].proxy,
             asset, system_user

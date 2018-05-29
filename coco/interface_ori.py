@@ -20,8 +20,8 @@ class SSHInterface_ori(paramiko.ServerInterface):
     """
 
     def __init__(self, app, request):
-        self._app = weakref.ref(app)
-        self._request = weakref.ref(request)
+        self._app = weakref.ref(app)  # 弱引用 app ，以免app无法回收
+        self._request = weakref.ref(request)  # 弱引用，以免无法回收被引用的类
         self.event = threading.Event()
         self.auth_valid = False
 
@@ -70,7 +70,9 @@ class SSHInterface_ori(paramiko.ServerInterface):
         """
         valid = self.validate_auth(username, password=password)
         if not valid:
-            logger.warning("Password and public key auth <%s> failed, reject it" % username)
+            logger.warning(
+                "Password and public key auth <%s> failed, reject it" %
+                username)
             return paramiko.AUTH_FAILED
         else:
             logger.info("Password auth <%s> success" % username)
@@ -83,7 +85,8 @@ class SSHInterface_ori(paramiko.ServerInterface):
         key = key.get_base64()
         valid = self.validate_auth(username, public_key=key)
         if not valid:
-            logger.debug("Public key auth <%s> failed, try to password" % username)
+            logger.debug(
+                "Public key auth <%s> failed, try to password" % username)
             return paramiko.AUTH_FAILED
         else:
             logger.debug("Public key auth <%s> success" % username)
@@ -94,7 +97,9 @@ class SSHInterface_ori(paramiko.ServerInterface):
         用户验证
         """
         user, _ = self.app.service.authenticate(
-            username, password=password, public_key=public_key,
+            username,
+            password=password,
+            public_key=public_key,
             remote_addr=self.request.remote_ip,
         )
 
@@ -110,24 +115,28 @@ class SSHInterface_ori(paramiko.ServerInterface):
         """
         logger.debug("Check channel direct tcpip request: %d %s %s" %
                      (chanid, origin, destination))
-        self.request.type.append('direct-tcpip')    # 设置请求类型
+        self.request.type.append('direct-tcpip')  # 设置请求类型
         self.request.meta.update({
-            'chanid': chanid, 'origin': origin,
+            'chanid': chanid,
+            'origin': origin,
             'destination': destination,
         })
         self.event.set()
         return 0
 
     def check_channel_env_request(self, channel, name, value):
-        logger.debug("Check channel env request: %s, %s, %s" %
-                     (channel, name, value))
+        logger.debug("Check channel env request: %s, %s, %s" % (channel, name,
+                                                                value))
         self.request.type.append('env')
         return False
 
     def check_channel_exec_request(self, channel, command):
         logger.debug("Check channel exec request:  `%s`" % command)
         self.request.type.append('exec')
-        self.request.meta.update({'channel': channel.get_id(), 'command': command})
+        self.request.meta.update({
+            'channel': channel.get_id(),
+            'command': command
+        })
         self.event.set()
         return False
 
@@ -141,18 +150,20 @@ class SSHInterface_ori(paramiko.ServerInterface):
         self.event.set()
         return False
 
-    def check_channel_pty_request(
-            self, channel, term, width, height,
-            pixelwidth, pixelheight, modes):
+    def check_channel_pty_request(self, channel, term, width, height,
+                                  pixelwidth, pixelheight, modes):
         """
         检查 channel 是否是 pty 请求
         """
         logger.info("Check channel pty request: %s %s %s %s %s" %
-                     (term, width, height, pixelwidth, pixelheight))
+                    (term, width, height, pixelwidth, pixelheight))
         self.request.type.append('pty')
         self.request.meta.update({
-            'channel': channel, 'term': term, 'width': width,
-            'height': height, 'pixelwidth': pixelwidth,
+            'channel': channel,
+            'term': term,
+            'width': width,
+            'height': height,
+            'pixelwidth': pixelwidth,
             'pixelheight': pixelheight,
         })
         self.event.set()
@@ -188,12 +199,14 @@ class SSHInterface_ori(paramiko.ServerInterface):
     def check_channel_x11_request(self, channel, single_connection,
                                   auth_protocol, auth_cookie, screen_number):
         logger.info("Check channel x11 request %s %s %s %s %s" %
-                    (channel, single_connection, auth_protocol,
-                     auth_cookie, screen_number))
+                    (channel, single_connection, auth_protocol, auth_cookie,
+                     screen_number))
         self.request.type.append('x11')
         self.request.meta.update({
-            'channel': channel.get_id(), 'single_connection': single_connection,
-            'auth_protocol': auth_protocol, 'auth_cookie': auth_cookie,
+            'channel': channel.get_id(),
+            'single_connection': single_connection,
+            'auth_protocol': auth_protocol,
+            'auth_cookie': auth_cookie,
             'screen_number': screen_number,
         })
         self.event.set()
@@ -203,7 +216,8 @@ class SSHInterface_ori(paramiko.ServerInterface):
         """
         检查是否是端口转发请求
         """
-        logger.info("Check channel port forward request: %s %s" % (address, port))
+        logger.info("Check channel port forward request: %s %s" % (address,
+                                                                   port))
         self.request.type.append('port-forward')
         self.request.meta.update({'address': address, 'port': port})
         self.event.set()
@@ -214,5 +228,3 @@ class SSHInterface_ori(paramiko.ServerInterface):
 
     # def __del__(self):
     #     print("GC: SSH interface gc")
-
-

@@ -30,7 +30,7 @@ class ProxyServer_ori:
         @params: app
         @params: client
         """
-        self._app = weakref.ref(app)
+        self._app = weakref.ref(app)    # 弱引用，以免无法回收被引用的类
         self.client = client
         self.server = None
         self.connecting = True

@@ -15,33 +15,45 @@ from .httpd_ori import ProxyNamespace_ori, HttpServer_ori, logger, ProxyServer
 
 
 class ProxyNamespace(ProxyNamespace_ori):
+    def on_data(self, message):
+        """
+        收到数据
+        :param message: {"data": "xxx", "room": "xxx"}
+        :return:
+        """
+        room = message.get('room')
+        if not room:
+            return
+
+        # 如果创建了代理房间则转发
+        # room_proxy 类型为 ProxyServer
+        room_proxy = self.clients[request.sid]['proxy'].get(room)
+        if room_proxy:
+            room_proxy.send({"data": message['data']})
+
     def on_host(self, message):
-        print("on_host")
-        # 此处获取主机的信息
+        """
+        核心
+        获取主机的信息，并进行代理
+
+        :param message: {"uuid":"","userid":"","secret":""}
+        """
         logger.debug("On host event trigger")
-        connection = str(uuid.uuid4())
+        connection = str(uuid.uuid4())  # 生成一个 uuid 作为连接房间
         asset_id = message.get('uuid', None)
         user_id = message.get('userid', None)
         secret = message.get('secret', None)
 
         self.emit('room', {'room': connection, 'secret': secret})
 
-        # if not asset_id or not user_id:
-        #     self.on_connect()
-        #     return
-
-        # 获取asset和system_user
-        # asset = self.app.service.get_asset(asset_id)
-        # system_user = self.app.service.get_system_user(user_id)
-        # TODO:
+        # TODO: 这里设置需要 proxy 的设备资产和帐户
         # asset =
         # system_user =
 
-        # if not asset or not system_user:
-        #     self.on_connect()
-        #     return
-
+        # 以下是核心代码
         child, parent = socket.socketpair()
+
+        # 设置参数
         # Client
         self.clients[request.sid]["client"][connection] = Client(
             parent, self.clients[request.sid]["request"])
@@ -51,68 +63,36 @@ class ProxyNamespace(ProxyNamespace_ori):
         # ProxyServer
         self.clients[request.sid]["forwarder"][connection] = ProxyServer(
             self.app, self.clients[request.sid]["client"][connection])
-        # 后台执行任务，ProxyServer.proxy
+
+        # 开始启动
+        # 后台执行任务，ProxyServer.proxy，传递asset和system_user
         self.socketio.start_background_task(
             self.clients[request.sid]["forwarder"][connection].proxy, asset,
             system_user)
 
     def on_token(self, message):
-        print("on_token")
+        """
+        一个协助处理函数
+        处理token
+        """
         # 此处获取token含有的主机的信息
         # logger.debug("On token trigger")
         # logger.debug(message)
         token = message.get('token', None)
         secret = message.get('secret', None)
 
-        connection = str(uuid.uuid4())
+        # 以下两句似乎没有什么用
+        # connection = str(uuid.uuid4())
+        # self.emit('room', {'room': connection, 'secret': secret})
 
-        self.emit('room', {'room': connection, 'secret': secret})
-
-        # if not (token or secret):
-        #     logger.debug("token or secret is None")
-        #     self.emit('data', {
-        #         'data': "\nOperation not permitted!",
-        #         'room': connection
-        #     })
-        #     self.emit('disconnect')
-        #     return None
-
-        # 从token中获取asset
-        # host = self.app.service.get_token_asset(token)
-        # TODO:
-        # host = {"asset":asset,"system_user":system_user}
-
-        logger.debug(host)
-        if not host:
-            logger.debug("host is None")
-            self.emit('data', {
-                'data': "\nOperation not permitted!",
-                'room': connection
-            })
-            self.emit('disconnect')
-            return None
-
-        user_id = host.get('user', None)
-        logger.debug("self.current_user")
-
-        # 获取用户profile
-        # self.current_user = self.app.service.get_user_profile(user_id)
-        # self.current_user = self.get_current_user()
-
-        logger.debug(self.current_user)
-        # {
-        #     "user": {UUID},
-        #     "asset": {UUID},
-        #     "system_user": {UUID}
-        # }
-
-        self.on_host({
-            'secret': secret,
-            'uuid': host['asset'],
-            'userid': host['system_user']
-        })
+        # 可模拟emit发送消息，这里参数为空
+        self.on_host({})
 
 
 class HttpServer(HttpServer_ori):
+    # 使用其他模式可能会导致卡住
+    async_mode = "threading"
+
     def register_routes(self):
+        """注册路由"""
         self.socket_io.on_namespace(ProxyNamespace('/ssh'))

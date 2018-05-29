@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-
 """
 httpd，提供websocket给前端
 """
@@ -106,7 +105,7 @@ class ProxyNamespace(BaseNamespace):
             rows = int(rows_request)
         else:
             rows = 24
-        req = Request((remote_ip, 0))   # 创建了一个 Request 对象
+        req = Request((remote_ip, 0))  # 创建了一个 Request 对象
         req.user = self.current_user
         req.meta = {
             "width": width,
@@ -117,7 +116,7 @@ class ProxyNamespace(BaseNamespace):
     def on_connect(self):
         """连接成功"""
         logger.debug("On connect event trigger")
-        super().on_connect()    # 继承方法
+        super().on_connect()  # 继承方法
         client = self.new_client()  # 创建新的client
         self.clients[request.sid] = client
         self.rooms[client['room']] = {
@@ -125,7 +124,7 @@ class ProxyNamespace(BaseNamespace):
             "member": [],
             "rw": []
         }
-        join_room(client['room'])   # 加入 flask_socketio 的房间
+        join_room(client['room'])  # 加入 flask_socketio 的房间
 
     def on_data(self, message):
         """
@@ -153,7 +152,7 @@ class ProxyNamespace(BaseNamespace):
         if not asset_id or not user_id:
             # self.on_connect()
             return
-        
+
         # 获取资产
         asset = self.app.service.get_asset(asset_id)
         # 获取system_user
@@ -167,21 +166,17 @@ class ProxyNamespace(BaseNamespace):
         child, parent = socket.socketpair()
         # 创建 Client
         self.clients[request.sid]["client"][connection] = Client(
-            parent, self.clients[request.sid]["request"]
-        )
+            parent, self.clients[request.sid]["request"])
         # 创建 WSProxy
         self.clients[request.sid]["proxy"][connection] = WSProxy(
-            self, child, self.clients[request.sid]["room"], connection
-        )
+            self, child, self.clients[request.sid]["room"], connection)
         # 创建 ProxyServer，这里就开始桥接
         self.clients[request.sid]["forwarder"][connection] = ProxyServer(
-            self.app, self.clients[request.sid]["client"][connection]
-        )
+            self.app, self.clients[request.sid]["client"][connection])
         # 后台任务，执行 ProxyServer.proxy() 开始代理
         self.socketio.start_background_task(
-            self.clients[request.sid]["forwarder"][connection].proxy,
-            asset, system_user
-        )
+            self.clients[request.sid]["forwarder"][connection].proxy, asset,
+            system_user)
 
     def on_token(self, message):
         # 此处获取token含有的主机的信息
@@ -193,7 +188,10 @@ class ProxyNamespace(BaseNamespace):
         self.emit('room', {'room': connection, 'secret': secret})
         if not (token or secret):
             logger.debug("token or secret is None")
-            self.emit('data', {'data': "\nOperation not permitted!", 'room': connection})
+            self.emit('data', {
+                'data': "\nOperation not permitted!",
+                'room': connection
+            })
             self.emit('disconnect')
             return None
 
@@ -202,7 +200,10 @@ class ProxyNamespace(BaseNamespace):
         logger.debug(host)
         if not host:
             logger.debug("host is None")
-            self.emit('data', {'data': "\nOperation not permitted!", 'room': connection})
+            self.emit('data', {
+                'data': "\nOperation not permitted!",
+                'room': connection
+            })
             self.emit('disconnect')
             return None
 
@@ -218,7 +219,11 @@ class ProxyNamespace(BaseNamespace):
         #     "system_user": {UUID}
         # }
 
-        self.on_host({'secret': secret, 'uuid': host['asset'], 'userid': host['system_user']})
+        self.on_host({
+            'secret': secret,
+            'uuid': host['asset'],
+            'userid': host['system_user']
+        })
 
     def on_resize(self, message):
         """调整窗口大小"""
@@ -234,14 +239,14 @@ class ProxyNamespace(BaseNamespace):
         logger.debug("On room event trigger")
         if session_id not in self.clients.keys():
             self.emit(
-                'error', "no such session",
-                room=self.clients[request.sid]["room"]
-            )
+                'error',
+                "no such session",
+                room=self.clients[request.sid]["room"])
         else:
             self.emit(
-                'room', self.clients[session_id]["room"],
-                room=self.clients[request.sid]["room"]
-            )
+                'room',
+                self.clients[session_id]["room"],
+                room=self.clients[request.sid]["room"])
 
     def on_join(self, room):
         logger.debug("On join room event trigger")
@@ -291,11 +296,8 @@ class HttpServer:
     """
 
     # prepare may be rewrite it
-    config = {
-        'SECRET_KEY': '',
-        'coco': None,
-        'LOGIN_URL': '/login'
-    }
+    config = {'SECRET_KEY': '', 'coco': None, 'LOGIN_URL': '/login'}
+    # 使用其他模式可能会导致卡住
     async_mode = "threading"
 
     def __init__(self, coco):

@@ -24,7 +24,7 @@ class InteractiveServer_ori:
     _sentinel = object()
 
     def __init__(self, app, client):
-        self._app = weakref.ref(app)
+        self._app = weakref.ref(app)    # 弱引用 app ，以免app无法回收
         self.client = client
         self.request = client.request
         self.assets = None

@@ -17,7 +17,7 @@ TIMEOUT = 10
 class SSHConnection_ori:
     """ssh客户端"""
     def __init__(self, app):
-        self._app = weakref.ref(app)
+        self._app = weakref.ref(app)    # 弱引用 app ，以免app无法回收
 
     @property
     def app(self):

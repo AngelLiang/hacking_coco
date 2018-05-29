@@ -210,10 +210,13 @@ class WSProxy:
     """
     WSProxy is websocket proxy channel object.
 
+    websocket代理通道对象
+
     Because tornado or flask websocket base event, if we want reuse func
     with sshd, we need change it to socket, so we implement a proxy.
 
     we should use socket pair implement it. usage:
+    我们使用 socket pair 实现它
 
     ```
 
@@ -252,19 +255,24 @@ class WSProxy:
         self.child.send(data)
 
     def forward(self):
+        """转发"""
         while not self.stop_event.is_set():
             try:
                 data = self.child.recv(BUF_SIZE)
             except OSError:
-                continue
+                continue    # 出错也继续
+                
             if len(data) == 0:
                 self.close()
-            data = data.decode(errors="ignore")
+            data = data.decode(errors="ignore") # 编码如果出错则忽略
+
+            # 发送数据到ws
             self.ws.emit("data", {'data': data, 'room': self.connection}, room=self.room)
             if len(data) == BUF_SIZE:
                 time.sleep(0.1)
 
     def auto_forward(self):
+        """自动转发"""
         thread = threading.Thread(target=self.forward, args=())
         thread.daemon = True
         thread.start()

@@ -32,6 +32,7 @@ coco.config.from_object(config)
 
 
 def check_pid(pid):
+    """检查pid"""
     """ Check For the existence of a unix pid. """
     try:
         os.kill(pid, 0)
@@ -42,15 +43,17 @@ def check_pid(pid):
 
 
 def start():
+    """启动"""
     print("Start coco process")
     if DAEMON:
         fork_daemon()
     with open(PID_FILE, 'w') as f:
         f.write(str(os.getpid()))
-    coco.run_forever()
+    coco.run_forever()  # coco启动
 
 
 def stop():
+    """停止"""
     print("Stop coco process")
     pid = None
     if os.path.isfile(PID_FILE):
@@ -60,9 +63,10 @@ def stop():
     if pid and pid.isdigit():
         for i in range(15):
             try:
-                os.kill(int(pid), signal.SIGTERM)
+                os.kill(int(pid), signal.SIGTERM)  # 杀死进程
             except ProcessLookupError:
                 pass
+
             if check_pid(int(pid)):
                 time.sleep(1)
                 continue
@@ -72,6 +76,7 @@ def stop():
 
 
 def show_status():
+    """显示状态"""
     pid = None
     if os.path.isfile(PID_FILE):
         with open(PID_FILE) as f:
@@ -113,20 +118,22 @@ def fork_daemon():
     os.dup2(se.fileno(), sys.stderr.fileno())
 
 
+# main
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description="""
+    parser = argparse.ArgumentParser(description="""
             coco service control tools;
 
             Example: \r\n 
 
             %(prog)s start -d;
-            """
-    )
+            """)
+    # 添加 arg 选项
     parser.add_argument(
-        'action', type=str, default='start',
+        'action',
+        type=str,
+        default='start',
         choices=("start", "stop", "restart", "status"),
-        help="Action to run"
+        help="Action to run",
     )
 
     parser.add_argument('-d', '--daemon', nargs="?", const=1)
@@ -135,6 +142,7 @@ if __name__ == '__main__':
     if args.daemon:
         DAEMON = True
 
+    # 执行操作
     action = args.action
     if action == "start":
         start()

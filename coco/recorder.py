@@ -34,7 +34,9 @@ class Singleton(type):
 
 
 class ReplayRecorder(metaclass=abc.ABCMeta):
-    """命令回复记录"""
+    """
+    命令回复记录 - 抽象类
+    """
 
     def __init__(self, app, session=None):
         self.app = app
@@ -94,7 +96,13 @@ class CommandRecorder:
 
 
 class ServerReplayRecorder(ReplayRecorder):
-
+    """服务器回复记录类
+    
+    1. 使用 session_start 方法打开一个文件，添加 { 头
+    2. 使用 record 方法对该文件增加命令记录，格式： "<timestrap>":"<data>", 
+    3. 使用 session_end 方法关闭文件，并写入 "0":""}  
+    
+    """
     def __init__(self, app):
         super().__init__(app)
         self.file = None
@@ -113,6 +121,8 @@ class ServerReplayRecorder(ReplayRecorder):
         if len(data['data']) > 0:
             # print(json.dumps(
             #     data['data'].decode('utf-8', 'replace')))
+            
+            # 写入文件
             self.file.write(
                 '"' + str(data['timestamp'] - self.starttime) + '":' + json.dumps(
                     data['data'].decode('utf-8', 'replace')) + ',')
@@ -122,14 +132,15 @@ class ServerReplayRecorder(ReplayRecorder):
         self.file = open(os.path.join(
             self.app.config['LOG_DIR'], session_id + '.replay'
         ), 'a')
-        self.file.write('{')
+        self.file.write('{') # 开头加一个 {
 
     def session_end(self, session_id):
-        self.file.write('"0":""}')
+        self.file.write('"0":""}')  # 末尾添加： "0":""} 
         self.file.close()
         with open(os.path.join(self.app.config['LOG_DIR'], session_id + '.replay'), 'rb') as f_in, \
                 gzip.open(os.path.join(self.app.config['LOG_DIR'], session_id + '.replay.gz'), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
+        # 上传记录
         if self.upload_replay(session_id):
             logger.info("Succeed to push {}'s {}".format(session_id, "record"))
         else:
@@ -197,6 +208,9 @@ class ServerReplayRecorder(ReplayRecorder):
 
 
 class ServerCommandRecorder(CommandRecorder, metaclass=Singleton):
+    """
+    服务命令记录
+    """
     batch_size = 10
     timeout = 5
     no = 0
@@ -206,16 +220,17 @@ class ServerCommandRecorder(CommandRecorder, metaclass=Singleton):
         self.queue = MemoryQueue()
         self.stop_evt = threading.Event()
         self.push_to_server_async()
-        self.__class__.no += 1
+        self.__class__.no += 1          # 计数？
 
     def record(self, data):
         if data and data['input']:
-            data['input'] = data['input'][:128]
-            data['output'] = data['output'][:1024]
-            data['timestamp'] = int(data['timestamp'])
-            self.queue.put(data)
+            data['input'] = data['input'][:128]     # 截取 128 个字符
+            data['output'] = data['output'][:1024]  # 截取 1024 个字符
+            data['timestamp'] = int(data['timestamp'])  # 时间戳
+            self.queue.put(data)                    # 存到队列里
 
     def push_to_server_async(self):
+        """异步上传到服务"""
         def func():
             while not self.stop_evt.is_set():
                 data_set = self.queue.mget(
@@ -227,7 +242,7 @@ class ServerCommandRecorder(CommandRecorder, metaclass=Singleton):
                     continue
                 logger.debug(
                     "Send {} commands to server".format(len(data_set)))
-                ok = self.app.service.push_session_command(data_set)
+                ok = self.app.service.push_session_command(data_set)    # 调用 sdk 上传
                 if not ok:
                     self.queue.mput(data_set)
 
@@ -246,6 +261,7 @@ class ServerCommandRecorder(CommandRecorder, metaclass=Singleton):
 
 
 class ESCommandRecorder(CommandRecorder, metaclass=Singleton):
+    """ES命令记录"""
     batch_size = 10
     timeout = 5
     no = 0
@@ -301,6 +317,7 @@ class ESCommandRecorder(CommandRecorder, metaclass=Singleton):
 
 
 def get_command_recorder_class(config):
+    """获取命令记录类"""
     command_storage = config["COMMAND_STORAGE"]
     storage_type = command_storage.get('TYPE')
 

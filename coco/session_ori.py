@@ -39,6 +39,7 @@ class Session_ori:
     def add_watcher(self, watcher, silent=False):
         """
         Add a watcher, and will be transport server side msg to it.
+
         添加一个 watcher，并将传输 server 端的消息给它
 
         :param watcher: A client socket
@@ -59,6 +60,7 @@ class Session_ori:
     def add_sharer(self, sharer, silent=False):
         """
         Add a sharer, it can read and write to server
+        
         添加一个 sharer，可以读写 server
 
         :param sharer:  A client socket
@@ -114,12 +116,15 @@ class Session_ori:
         })
 
     def pre_bridge(self):
-        """桥接准备工作"""
+        """桥接准备工作
+        即准备命令回复记录
+        """
         self._replay_recorder.session_start(self.id)
         self._command_recorder.session_start(self.id)
 
     def post_bridge(self):
-        """桥接收尾工作"""
+        """桥接收尾工作
+        """
         self._replay_recorder.session_end(self.id)
         self._command_recorder.session_end(self.id)
 
@@ -150,6 +155,7 @@ class Session_ori:
             for sock in [key.fileobj for key, _ in events]:
                 data = sock.recv(BUF_SIZE)
                 # self.put_replay(data)
+                # server
                 if sock == self.server:     
                     if len(data) == 0:  # 如果收到的 data 为0， server 关闭连接
                         msg = "Server close the connection"
@@ -161,6 +167,7 @@ class Session_ori:
                     # 否则向 client 、watcher 和 sharer 发送数据
                     for watcher in [self.client] + self._watchers + self._sharers:
                         watcher.send(data)
+                # client
                 elif sock == self.client:
                     if len(data) == 0:  # 如果收到的 data 为0， client 关闭连接
                         msg = "Client close the connection: {}".format(self.client)
@@ -170,11 +177,13 @@ class Session_ori:
                         self.close()
                         break
                     self.server.send(data)  # 否则向 server 发送数据
+                # sharer
                 elif sock in self._sharers:
                     if len(data) == 0:
                         logger.info("Sharer {} leave the session {}".format(sock, self.id))
                         self.remove_sharer(sock)
                     self.server.send(data)  # sharer 向 server 发送数据
+                # watcher
                 elif sock in self._watchers:
                     if len(data) == 0:
                         self._watchers.remove(sock)

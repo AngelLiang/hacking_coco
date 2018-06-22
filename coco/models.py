@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+"""
+model
+"""
+
 import threading
 import datetime
 import weakref
@@ -95,7 +100,7 @@ class Server:
     Because we don't want to using python dynamic feature, such asset
     have the chan and system_user attr.
 
-    Server对象类似于client，是一个封装，是一个到资产的连接。
+    Server 对象类似于 client ，是一个封装，是一个到资产的连接。
     """
 
     # Todo: Server name is not very suitable
@@ -132,6 +137,7 @@ class Server:
             return None
 
     def parse(self, b):
+        """解析"""
         if isinstance(b, str):
             b = b.encode("utf-8")
         if not self._input_initial:
@@ -139,10 +145,10 @@ class Server:
 
         if self._have_enter_char(b):
             self._in_input_state = False
-            self._input = self._parse_input()
+            self._input = self._parse_input()   # 解析命令
         else:
             if not self._in_input_state:
-                self._output = self._parse_output()
+                self._output = self._parse_output() # 解析输入
                 logger.debug("\n{}\nInput: {}\nOutput: {}\n{}".format(
                     "#" * 30 + " Command " + "#" * 30,
                     self._input, self._output,
@@ -150,8 +156,11 @@ class Server:
                 ))
                 if self._input:
                     self.session.put_command(self._input, self._output) # 存放命令回复历史记录
+                
+                # 清空
                 self.input_data.clean()
                 self.output_data.clean()
+
             self._in_input_state = True
 
     def send(self, b):

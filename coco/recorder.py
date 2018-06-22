@@ -129,6 +129,8 @@ class ServerReplayRecorder(ReplayRecorder):
 
     def session_start(self, session_id):
         self.starttime = time.time()
+        
+        # 打开文件
         self.file = open(os.path.join(
             self.app.config['LOG_DIR'], session_id + '.replay'
         ), 'a')
@@ -136,10 +138,13 @@ class ServerReplayRecorder(ReplayRecorder):
 
     def session_end(self, session_id):
         self.file.write('"0":""}')  # 末尾添加： "0":""} 
-        self.file.close()
+        self.file.close()   # 关闭文件
+        
+        # 保存到文件
         with open(os.path.join(self.app.config['LOG_DIR'], session_id + '.replay'), 'rb') as f_in, \
                 gzip.open(os.path.join(self.app.config['LOG_DIR'], session_id + '.replay.gz'), 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
+        
         # 上传记录
         if self.upload_replay(session_id):
             logger.info("Succeed to push {}'s {}".format(session_id, "record"))
@@ -169,6 +174,7 @@ class ServerReplayRecorder(ReplayRecorder):
             time.strftime('%Y-%m-%d', time.localtime(self.starttime)) + '/' + session_id + '.replay.gz')
 
     def push_storage(self, times, session_id):
+        """推送到仓库"""
         if times > 0:
             if self.push_to_storage(session_id):
                 logger.info(
@@ -188,6 +194,7 @@ class ServerReplayRecorder(ReplayRecorder):
                 return self.push_storage(3, session_id)
 
     def finish_replay(self, times, session_id):
+        """收尾"""
         if times > 0:
             if self.app.service.finish_replay(session_id):
                 logger.info(

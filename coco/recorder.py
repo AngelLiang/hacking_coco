@@ -153,12 +153,15 @@ class ServerReplayRecorder(ReplayRecorder):
         self.upload_replay(session_id)
 
     def upload_replay(self, session_id):
-        """上传记录"""
+        """上传回复记录"""
         configs = self.app.service.load_config_from_server()
         logger.debug("upload_replay print config: {}".format(configs))
+
+        # 客户端存储仓库
         self.client = jms_storage.init(configs["REPLAY_STORAGE"])
         if not self.client:
             self.client = jms_storage.jms(self.app.service)
+
         if self.push_storage(3, session_id):
             if self.finish_replay(3, session_id):
                 return True

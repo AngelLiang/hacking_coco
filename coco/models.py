@@ -114,9 +114,9 @@ class Server:
 
         self.input_data = SizedList(maxsize=1024)
         self.output_data = SizedList(maxsize=1024)
-        self._in_input_state = True
+        self._in_input_state = True     # 输入状态
         self._input_initial = False
-        self._in_vim_state = False
+        self._in_vim_state = False      # vim 模式？
 
         self._input = ""
         self._output = ""
@@ -194,12 +194,14 @@ class Server:
         return False
 
     def _parse_output(self):
+        """解析输出"""
         if not self.output_data:
             return ''
         parser = utils.TtyIOParser()
         return parser.parse_output(self.output_data)
 
     def _parse_input(self):
+        """解析输入"""
         if not self.input_data or self.input_data[0] == char.RZ_PROTOCOL_CHAR:
             return
         parser = utils.TtyIOParser()
